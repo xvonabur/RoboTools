@@ -470,7 +470,7 @@ public class RTHTTPClient implements HttpRequestRetryHandler
             response.getEntity().consumeContent();
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == 200 || statusCode == 201 || statusCode == 202
-                        || statusCode == 203 || statusCode == 205 || statusCode == 206)
+                    || statusCode == 203 || statusCode == 205 || statusCode == 206)
             {
                 return body;
             } else
@@ -511,37 +511,14 @@ public class RTHTTPClient implements HttpRequestRetryHandler
             http = new DefaultHttpClient(ccm, params);
         } else if (configuration.isAllowSelfSignedCerts())
         {
-            HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier()
-            {
-                public boolean verify(String hostname, SSLSession session)
-                {
-                    return true;
-                }
-            });
             SSLContext context = SSLContext.getInstance("TLS");
-            context.init(null, new X509TrustManager[]{new X509TrustManager()
-            {
-                public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException
-                {
-                }
-
-                public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException
-                {
-                }
-
-                public X509Certificate[] getAcceptedIssuers()
-                {
-                    return new X509Certificate[0];
-                }
-            }}, new SecureRandom());
-
             HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
 
             KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
             trustStore.load(null, null);
 
             org.apache.http.conn.ssl.SSLSocketFactory sf = new DummySslSocketFactory(trustStore);
-            sf.setHostnameVerifier(org.apache.http.conn.ssl.SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+            sf.setHostnameVerifier(org.apache.http.conn.ssl.SSLSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
 
             SchemeRegistry registry = new SchemeRegistry();
             registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), configuration.getDefaultHttpPort()));
@@ -561,7 +538,7 @@ public class RTHTTPClient implements HttpRequestRetryHandler
             http.addRequestInterceptor(new HttpRequestInterceptor()
             {
                 public void process(final HttpRequest request, final HttpContext context) throws HttpException,
-                                                                                                 IOException
+                        IOException
                 {
                     if (!request.containsHeader("Accept-Encoding"))
                     {
@@ -631,25 +608,22 @@ public class RTHTTPClient implements HttpRequestRetryHandler
         SSLContext sslContext = SSLContext.getInstance("TLS");
 
         public DummySslSocketFactory(KeyStore truststore) throws NoSuchAlgorithmException, KeyManagementException,
-                                                                 KeyStoreException, UnrecoverableKeyException
+                KeyStoreException, UnrecoverableKeyException
         {
             super(truststore);
 
-            TrustManager tm = new X509TrustManager()
-            {
-                public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException
-                {
-                }
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManagerFactory.init(truststore);
+            TrustManager tm = null;
 
-                public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException
-                {
+            for (TrustManager trustManager : trustManagerFactory.getTrustManagers()) {
+                if (trustManager instanceof X509TrustManager) {
+                    tm = trustManager;
                 }
+            }
 
-                public X509Certificate[] getAcceptedIssuers()
-                {
-                    return null;
-                }
-            };
+            if (tm == null)
+                throw new KeyManagementException("Cannot find X509TrustManager");
 
             sslContext.init(null, new TrustManager[]{tm}, null);
         }
