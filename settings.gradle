@@ -1,0 +1,3 @@
+rootProject.name='RobotoolsExample'
+include ':app'
+include ':robotools'
