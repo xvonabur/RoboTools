@@ -291,10 +291,6 @@ public abstract class RTDownloadService<P extends RTDownloadTask> extends Servic
         currentTask.targetFile = currentTask.createDownloadReceiverFile();
         currentTask.status = RTDownloadStatus.Downloading;
 
-        http.getConfiguration().setHttpConnectionTimeout(job.getHttpConnectionTimeoutMs());
-        http.getConfiguration().setHttpDataResponseTimeout(job.getHttpDataResponseTimeoutMs());
-        http.getConfiguration().setEnableGzipCompression(true);
-
         updateNotifications();
 
         uiHandler.post(new Runnable()

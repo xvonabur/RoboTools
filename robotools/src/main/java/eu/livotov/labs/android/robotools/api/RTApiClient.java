@@ -1,13 +1,15 @@
 package eu.livotov.labs.android.robotools.api;
 
 import android.util.Log;
-import eu.livotov.labs.android.robotools.net.RTHTTPClient;
-import eu.livotov.labs.android.robotools.net.RTHTTPError;
-import eu.livotov.labs.android.robotools.net.RTPostParameter;
+
 import org.apache.http.HttpResponse;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import eu.livotov.labs.android.robotools.net.RTHTTPClient;
+import eu.livotov.labs.android.robotools.net.RTHTTPError;
+import eu.livotov.labs.android.robotools.net.RTPostParameter;
 
 /**
  * (c) Livotov Labs Ltd. 2012
@@ -22,12 +24,7 @@ public abstract class RTApiClient extends RTHTTPClient
 
     protected RTApiClient()
     {
-        super(false);
-    }
-
-    protected RTApiClient(boolean allowSelfSignedCerts)
-    {
-        super(allowSelfSignedCerts);
+        super();
     }
 
     public boolean isDebugMode()
@@ -118,19 +115,9 @@ public abstract class RTApiClient extends RTHTTPClient
                         response = submitForm(url, headers, parameters);
                     }
                     break;
-
                 case GET:
                     response = executeGetRequest(url, headers, parameters);
                     break;
-
-                case PUT:
-                    response = processPut(cmd, url, headers, parameters);
-                    break;
-
-                case DELETE:
-                    response = processDelete(cmd, url, headers, parameters);
-                    break;
-
                 default:
                     response = submitForm(url, headers, parameters);
                     break;
@@ -199,50 +186,6 @@ public abstract class RTApiClient extends RTHTTPClient
         }
     }
 
-    private HttpResponse processPut(final RTApiCommand cmd, final String url, final List<RTPostParameter> headers, final List<RTPostParameter> parameters)
-    {
-        StringBuffer body = new StringBuffer();
-        cmd.buildRequestBody(body);
-
-        if (debugMode)
-        {
-            if (body.length() > 0)
-            {
-                Log.d(RTApiClient.class.getSimpleName(), "PUT Body:\n" + body.toString());
-            }
-        }
-
-        if (body.length() > 0)
-        {
-            return executePutRequest(url, cmd.getContentType(), "utf-8", body.toString(), headers, parameters);
-        } else
-        {
-            return executePutRequest(url, headers, parameters);
-        }
-    }
-
-    private HttpResponse processDelete(final RTApiCommand cmd, final String url, final List<RTPostParameter> headers, final List<RTPostParameter> parameters)
-    {
-        StringBuffer body = new StringBuffer();
-        cmd.buildRequestBody(body);
-
-        if (debugMode)
-        {
-            if (body.length() > 0)
-            {
-                Log.d(RTApiClient.class.getSimpleName(), "DELETE Body:\n" + body.toString());
-            }
-        }
-
-        if (body.length() > 0)
-        {
-            return executeDeleteRequest(url, cmd.getContentType(), "utf-8", body.toString(), headers, parameters);
-        } else
-        {
-            return executeDeleteRequest(url, headers, parameters);
-        }
-    }
-
     protected abstract void onCommandHttpRequestDone(RTApiCommand cmd, String url, List<RTPostParameter> parameters, HttpResponse response);
 
     protected abstract void onCommandResponseDataLoaded(RTApiCommand cmd, String url, List<RTPostParameter> parameters, HttpResponse response, String data);
@@ -252,11 +195,6 @@ public abstract class RTApiClient extends RTHTTPClient
     protected abstract void onCommandPreExecute(RTApiCommand cmd, String finalUrl, List<RTPostParameter> parameters, List<RTPostParameter> headers);
 
     protected abstract void onCommandPostExecureWithError(final RTApiCommand cmd, final String url, final List<RTPostParameter> parameters, final int statusCode, final String statusText, final String responseBody);
-
-    public void resetCookies()
-    {
-        getConfiguration().resetCookies();
-    }
 
     protected String secureSlash(String path)
     {
