@@ -1,9 +1,8 @@
 package eu.livotov.labs.android.robotools.net;
 
 import android.text.TextUtils;
-import eu.livotov.labs.android.robotools.io.RTStreamUtil;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * Created with IntelliJ IDEA.
@@ -28,17 +27,17 @@ public class RTHTTPError extends RuntimeException
         protocolVersion = null;
     }
 
-    public RTHTTPError(HttpResponse rsp, final String responseBody)
+    public RTHTTPError(Response rsp, final String responseBody)
     {
-        StatusLine statusLine = rsp.getStatusLine();
-        statusCode = statusLine.getStatusCode();
-        statusText = statusLine.getReasonPhrase();
+        statusCode = rsp.code();
+        statusText = rsp.message();
+        ResponseBody respBody = rsp.body();
 
         if (TextUtils.isEmpty(responseBody))
         {
             try
             {
-                this.responseBody = RTStreamUtil.streamToString(rsp.getEntity().getContent(), TextUtils.isEmpty(rsp.getEntity().getContentEncoding().getValue()) ? "utf-8" : rsp.getEntity().getContentEncoding().getValue(), true);
+                this.responseBody = respBody != null ? respBody.string() : "";
             } catch (Throwable err)
             {
             }
@@ -47,7 +46,7 @@ public class RTHTTPError extends RuntimeException
             this.responseBody = responseBody;
         }
 
-        protocolVersion = statusLine.getProtocolVersion().toString();
+        protocolVersion = rsp.protocol().toString();
     }
 
     public String getMessage()

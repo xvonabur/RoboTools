@@ -2,14 +2,13 @@ package eu.livotov.labs.android.robotools.api;
 
 import android.util.Log;
 
-import org.apache.http.HttpResponse;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import eu.livotov.labs.android.robotools.net.RTHTTPClient;
 import eu.livotov.labs.android.robotools.net.RTHTTPError;
 import eu.livotov.labs.android.robotools.net.RTPostParameter;
+import okhttp3.Response;
 
 /**
  * (c) Livotov Labs Ltd. 2012
@@ -102,7 +101,7 @@ public abstract class RTApiClient extends RTHTTPClient
                 }
             }
 
-            HttpResponse response = null;
+            Response response = null;
 
             switch (rtType)
             {
@@ -127,8 +126,8 @@ public abstract class RTApiClient extends RTHTTPClient
 
             if (debugMode)
             {
-                Log.d(RTApiClient.class.getSimpleName(), "<< Server returned status code: " + response.getStatusLine().getStatusCode());
-                Log.d(RTApiClient.class.getSimpleName(), "<< " + response.getStatusLine().getReasonPhrase());
+                Log.d(RTApiClient.class.getSimpleName(), "<< Server returned status code: " + response.code());
+                Log.d(RTApiClient.class.getSimpleName(), "<< " + response.message());
             }
 
             final String data = loadHttpResponseToString(response, transportEncoding);
@@ -164,7 +163,7 @@ public abstract class RTApiClient extends RTHTTPClient
         }
     }
 
-    private HttpResponse processPost(final RTApiCommand cmd, final String url, final List<RTPostParameter> parameters, final List<RTPostParameter> headers)
+    private Response processPost(final RTApiCommand cmd, final String url, final List<RTPostParameter> parameters, final List<RTPostParameter> headers)
     {
         StringBuffer body = new StringBuffer();
         cmd.buildRequestBody(body);
@@ -186,11 +185,11 @@ public abstract class RTApiClient extends RTHTTPClient
         }
     }
 
-    protected abstract void onCommandHttpRequestDone(RTApiCommand cmd, String url, List<RTPostParameter> parameters, HttpResponse response);
+    protected abstract void onCommandHttpRequestDone(RTApiCommand cmd, String url, List<RTPostParameter> parameters, Response response);
 
-    protected abstract void onCommandResponseDataLoaded(RTApiCommand cmd, String url, List<RTPostParameter> parameters, HttpResponse response, String data);
+    protected abstract void onCommandResponseDataLoaded(RTApiCommand cmd, String url, List<RTPostParameter> parameters, Response response, String data);
 
-    protected abstract void onCommandPostExecure(RTApiCommand cmd, String url, List<RTPostParameter> parameters, HttpResponse response, RTApiCommandResult result);
+    protected abstract void onCommandPostExecure(RTApiCommand cmd, String url, List<RTPostParameter> parameters, Response response, RTApiCommandResult result);
 
     protected abstract void onCommandPreExecute(RTApiCommand cmd, String finalUrl, List<RTPostParameter> parameters, List<RTPostParameter> headers);
 

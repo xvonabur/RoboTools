@@ -1,13 +1,5 @@
 package eu.livotov.labs.android.robotools.net;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseFactory;
-import org.apache.http.HttpVersion;
-import org.apache.http.entity.BasicHttpEntity;
-import org.apache.http.impl.DefaultHttpResponseFactory;
-import org.apache.http.message.BasicStatusLine;
-
-import java.io.InputStream;
 import java.net.URLEncoder;
 import java.util.Collection;
 
@@ -28,7 +20,7 @@ public class RTHTTPClient
 
     public RTHTTPClient() {}
 
-    public HttpResponse executeGetRequest(final String url)
+    public Response executeGetRequest(final String url)
     {
         try
         {
@@ -37,16 +29,14 @@ public class RTHTTPClient
                     .url(url)
                     .build();
 
-            Response response = httpClient.newCall(request).execute();
-
-            return getLegacyHttpResponse(response);
+            return httpClient.newCall(request).execute();
         } catch (Throwable err)
         {
             throw new RTHTTPError(err);
         }
     }
 
-    public HttpResponse executeGetRequest(final String url, Collection<RTPostParameter> headers, Collection<RTPostParameter> params)
+    public Response executeGetRequest(final String url, Collection<RTPostParameter> headers, Collection<RTPostParameter> params)
     {
         try
         {
@@ -80,9 +70,7 @@ public class RTHTTPClient
             }
 
             Request request = requestBuilder.build();
-            Response response = httpClient.newCall(request).execute();
-
-            return getLegacyHttpResponse(response);
+            return httpClient.newCall(request).execute();
         } catch (Throwable err)
         {
             throw new RTHTTPError(err);
@@ -96,16 +84,16 @@ public class RTHTTPClient
 
     public String executeGetRequestToString(final String url, final String encoding)
     {
-        HttpResponse response = executeGetRequest(url);
+        Response response = executeGetRequest(url);
         return loadHttpResponseToString(response, encoding);
     }
 
-    public HttpResponse executePostRequest(final String url, final String contentType, final String content, RTPostParameter... headers)
+    public Response executePostRequest(final String url, final String contentType, final String content, RTPostParameter... headers)
     {
         return executePostRequest(url, contentType, "utf-8", content, headers);
     }
 
-    public HttpResponse executePostRequest(final String url, final String contentType, final String encoding, final String content, RTPostParameter... headers)
+    public Response executePostRequest(final String url, final String contentType, final String encoding, final String content, RTPostParameter... headers)
     {
         try
         {
@@ -119,9 +107,7 @@ public class RTHTTPClient
             }
             Request request = requestBuilder.post(requestBody).build();
 
-            Response response = client.newCall(request).execute();
-
-            return getLegacyHttpResponse(response);
+            return client.newCall(request).execute();
         } catch (Throwable err)
         {
             throw new RTHTTPError(err);
@@ -135,11 +121,11 @@ public class RTHTTPClient
 
     public String executePostRequestToString(final String url, final String contentType, final String encoding, final String content, RTPostParameter... headers)
     {
-        HttpResponse response = executePostRequest(url, contentType, encoding, content, headers);
+        Response response = executePostRequest(url, contentType, encoding, content, headers);
         return loadHttpResponseToString(response, encoding);
     }
 
-    public HttpResponse submitForm(final String url, Collection<RTPostParameter> headers, Collection<RTPostParameter> formFields)
+    public Response submitForm(final String url, Collection<RTPostParameter> headers, Collection<RTPostParameter> formFields)
     {
         try
         {
@@ -159,21 +145,19 @@ public class RTHTTPClient
             }
             Request request = requestBuilder.post(formBody).build();
 
-            Response response = client.newCall(request).execute();
-            return getLegacyHttpResponse(response);
+            return client.newCall(request).execute();
         } catch (Throwable err)
         {
             throw new RTHTTPError(err);
         }
     }
 
-    public String loadHttpResponseToString(HttpResponse response, final String encoding)
+    public String loadHttpResponseToString(Response response, final String encoding)
     {
         try
         {
-            final String body = RTStreamUtil.streamToString(response.getEntity().getContent(), encoding, true);
-            response.getEntity().consumeContent();
-            int statusCode = response.getStatusLine().getStatusCode();
+            final String body = RTStreamUtil.streamToString(response.body().byteStream(), encoding, true);
+            int statusCode = response.code();
             if (statusCode == 200 || statusCode == 201 || statusCode == 202
                     || statusCode == 203 || statusCode == 205 || statusCode == 206)
             {
@@ -192,27 +176,6 @@ public class RTHTTPClient
                 throw new RTHTTPError(err);
             }
         }
-    }
-
-    public HttpResponse getLegacyHttpResponse(Response response) {
-        HttpResponseFactory factory = new DefaultHttpResponseFactory();
-
-        if (response.body() != null) {
-            InputStream bodyStream = response.body().byteStream();
-
-            BasicStatusLine statusLine = new BasicStatusLine(HttpVersion.HTTP_1_1, response.code(), null);
-            HttpResponse legacyResponse = factory.newHttpResponse(statusLine, null);
-            BasicHttpEntity entity = new BasicHttpEntity();
-            entity.setContent(bodyStream);
-
-            legacyResponse.setEntity(entity);
-
-            return legacyResponse;
-        } else {
-            BasicStatusLine statusLine = new BasicStatusLine(HttpVersion.HTTP_1_1, 500, "Empty API response");
-            return factory.newHttpResponse(statusLine, null);
-        }
-
     }
 
     private OkHttpClient createHttpClient() {

@@ -2,7 +2,6 @@ package eu.livotov.labs.android.robotools.net;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import org.apache.http.NameValuePair;
 
 import java.io.File;
 
@@ -13,7 +12,7 @@ import java.io.File;
  * Time: 11:57 AM
  * To change this template use File | Settings | File Templates.
  */
-public class RTPostParameter implements NameValuePair, Parcelable
+public class RTPostParameter implements Parcelable
 {
 
     private String name;
@@ -26,13 +25,11 @@ public class RTPostParameter implements NameValuePair, Parcelable
         this.value = value;
     }
 
-    @Override
     public String getName()
     {
         return name;
     }
 
-    @Override
     public String getValue()
     {
         return value;

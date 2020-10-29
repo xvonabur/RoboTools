@@ -1,20 +1,20 @@
 package eu.livotov.labs.android.robotools.geo;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.location.*;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,6 +23,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
+
+import eu.livotov.labs.android.robotools.net.RTHTTPClient;
+import okhttp3.Response;
 
 /**
  * (c) Livotov Labs Ltd. 2012
@@ -117,6 +120,7 @@ public class RTGps implements LocationListener
         this.locationManagerEventListener = locationManagerEventListener;
     }
 
+    @SuppressLint("MissingPermission")
     public boolean enable(boolean canUseCachedDataOnly)
     {
         Log.i("RTGps", "ENABLE GeoManager, using cached only: " + canUseCachedDataOnly);
@@ -338,23 +342,19 @@ public class RTGps implements LocationListener
     {
         Log.d("RTGps", " Getting address from http...");
         Address retAddress = null;
-        HttpGet httpGet = new HttpGet("http://maps.google.com/maps/api/geocode/json?sensor=false&latlng=" + lat + "%2C" + lon);
-        HttpClient client = new DefaultHttpClient();
-        HttpResponse response;
+        RTHTTPClient httpClient = new RTHTTPClient();
+
         StringBuilder stringBuilder = new StringBuilder();
 
         try
         {
-            response = client.execute(httpGet);
-            HttpEntity entity = response.getEntity();
-            InputStream stream = entity.getContent();
+            Response response = httpClient.executeGetRequest("http://maps.google.com/maps/api/geocode/json?sensor=false&latlng=" + lat + "%2C" + lon);
+            InputStream stream = response.body().byteStream();
             int b;
             while ((b = stream.read()) != -1)
             {
                 stringBuilder.append((char) b);
             }
-        } catch (ClientProtocolException e)
-        {
         } catch (IOException e)
         {
         }
